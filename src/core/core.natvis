@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="Array&lt;*&gt;">
+        <DisplayString>{{count={count}, capacity={capacity}}}</DisplayString>
+        <Expand>
+            <ArrayItems>
+                <Size>count</Size>
+                <ValuePointer>data</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+
+    <Type Name="Slice&lt;unsigned char&gt;">
+        <DisplayString Condition="data != 0">{data,[count]s8}</DisplayString>
+        <StringView Condition="data != 0">data,[count]s8</StringView>
+    </Type>
+
+    <Type Name="Slice&lt;*&gt;">
+        <DisplayString>{{count={count}}}</DisplayString>
+        <Expand>
+            <ArrayItems>
+                <Size>count</Size>
+                <ValuePointer>data</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+
+    <Type Name="Table&lt;*,*&gt;">
+        <DisplayString>{{count={count}, capacity={capacity}}}</DisplayString>
+        <Expand>
+            <CustomListItems>
+                <Variable Name="i" InitialValue="0"/>
+                <Loop>
+                    <Break Condition="i == capacity"/>
+                    <If Condition="entries[i].sign.value != 0">
+                        <If Condition="entries[i].sign.value != 18446744073709551615">
+                            <Item>entries[i]</Item>
+                        </If>
+                    </If>
+                    <Exec>++i</Exec>
+                </Loop>
+            </CustomListItems>
+        </Expand>
+    </Type>
+
+    <Type Name="math::Vector&lt;*,2&gt;">
+        <DisplayString>{{{x}, {y}}}</DisplayString>
+    </Type>
+
+    <Type Name="math::Vector&lt;*,3&gt;">
+        <DisplayString>{{{x}, {y}, {z}}}</DisplayString>
+    </Type>
+
+    <Type Name="math::Vector&lt;*,4&gt;">
+        <DisplayString>{{{x}, {y}, {z}, {w}}}</DisplayString>
+    </Type>
+</AutoVisualizer>

@@ -245,30 +245,177 @@ string_equal_ignore_case(Slice<u8> a, Slice<u8> b)
     return true;
 }
 
+bool
+string_parse_signed(Slice<u8> str, i64 int_min, i64 int_max, i64 base, i64 *result)
+{
+    u64 acc = 0;
+    bool neg = false;
+    u64 ovflimit, ovfmin, ovfmax;
+
+    while (str.count && is_space(str.data[0])) {
+        advance(&str, 1);
+    }
+    if (str.count == 0) goto err;
+    if (str.data[0] == '-') {
+        neg = true;
+        advance(&str, 1);
+        if (str.count == 0) goto err;
+    }
+
+    if (str.data[0] == '0') {
+        if ((base == 0 || base == 16)
+                && str.count > 1
+                && (str[1] == 'x' || str[1] == 'X')) {
+            base = 16;
+            advance(&str, 2);
+        } else if (base == 0 || base == 8) {
+            base = 8;
+            advance(&str, 1);
+        }
+    }
+    if (base == 0) base = 10;
+
+    ovflimit = neg ? int_min : int_max;
+    ovfmin = ovflimit % base;
+    ovfmax = ovflimit / base;
+
+    for (; str.count; ++str.data, --str.count) {
+        i8 c = *str.data;
+        if (is_digit(c)) {
+            c -= '0';
+        } else if (is_alpha(c)) {
+            c -= is_upper(c) ? 'A' - 10 : 'a' - 10;
+        } else {
+            goto err;
+        }
+        if (c >= base) goto err;
+        if (acc > ovfmax || (acc == ovfmax && acc > ovfmin)) goto err;
+
+        acc *= base;
+        acc += c;
+    }
+
+    *result = (i64)acc;
+    if (neg) *result = -(*result);
+    return true;
+err:
+    *result = 0;
+    return false;
+}
+
+bool
+string_parse_unsigned(Slice<u8> str, u64 int_max, u64 base, u64 *result)
+{
+    u64 acc = 0;
+    u64 ovfmin, ovfmax;
+
+    while (str.count && is_space(str.data[0])) {
+        advance(&str, 1);
+    }
+    if (str.count == 0) goto err;
+
+    if (str.data[0] == '0') {
+        if ((base == 0 || base == 16)
+                && str.count > 1
+                && (str.data[1] == 'x' || str.data[1] == 'X')) {
+            base = 16;
+            advance(&str, 2);
+        } else if (base == 0 || base == 8) {
+            base = 8;
+            advance(&str, 1);
+        }
+    }
+    if (base == 0) base = 10;
+
+    ovfmin = int_max % base;
+    ovfmax = int_max / base;
+
+    for (; str.count; ++str.data, --str.count) {
+        u8 c = *str.data;
+        if (is_digit(c)) {
+            c -= '0';
+        } else if (is_alpha(c)) {
+            c -= is_upper(c) ? 'A' - 10 : 'a' - 10;
+        } else {
+            goto err;
+        }
+        if (c >= base) goto err;
+        if (acc > ovfmax || (acc == ovfmax && acc > ovfmin)) goto err;
+
+        acc *= base;
+        acc += c;
+    }
+
+    *result = acc;
+    return true;
+err:
+    *result = 0;
+    return false;
+}
+
 template <>
 bool
 string_parse_float<f64>(Slice<u8> str, f64 *result)
 {
-    char buffer[128];
-    char *end;
-    usize count = M_MIN(str.count, sizeof(buffer) - 1);
-    memcpy(buffer, str.data, count);
-    buffer[count] = 0;
-    *result = strtod(buffer, &end);
-    usize parsed_count = end - buffer;
-    return str.count == parsed_count;
+    bool parsed_dot = false;
+    bool parsed_e = false;
+    bool neg = false;
+    f64 num = 0.0;
+    i64 e = 0;
+    usize i = 0;
+
+    while (str.count && is_space(str.data[0])) {
+        advance(&str, 1);
+    }
+    if (str.count == 0) goto err;
+
+    if (str.data[0] == '-') {
+        advance(&str, 1);
+        neg = true;
+    }
+    if (str.count == 0) goto err;
+
+    for (; i < str.count; ++i) {
+        char c = str.data[i];
+        if (is_digit(c)) {
+            num = num * 10.0 + (c - '0');
+        } else if (!parsed_dot && c == '.') {
+            parsed_dot = true;
+            continue;
+        } else if (c == 'e' || c == 'E') {
+            parsed_e = true;
+            break;
+        } else {
+            goto err;
+        }
+        if (parsed_dot) --e;
+    }
+
+    if (parsed_e) {
+        i64 e_part;
+        if (i + 1 >= str.count) goto err;
+        if (!string_parse_int(slice(str, i + 1), &e_part)) goto err;
+        e += e_part;
+    }
+
+    if (e < 0) {
+        for (; e != 0; ++e) num /= 10;
+    } else {
+        for (; e != 0; --e) num *= 10;
+    }
+    *result = neg ? -num : num;
+    return true;
+err:
+    *result = 0.0;
+    return false;
 }
 
 template <>
 bool
 string_parse_float<f32>(Slice<u8> str, f32 *result)
 {
-    char buffer[128];
-    char *end;
-    usize count = M_MIN(str.count, sizeof(buffer) - 1);
-    memcpy(buffer, str.data, count);
-    buffer[count] = 0;
-    *result = strtof(buffer, &end);
-    usize parsed_count = end - buffer;
-    return str.count == parsed_count;
+    f64 result64;
+    bool parsed = string_parse_float<f64>(str, &result64);
+    *result = (f32)result64;
+    return parsed;
 }

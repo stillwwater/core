@@ -287,21 +287,6 @@ test("string_parse_float")
     expect(ok2);
     expect(x2 == 0.0);
 
-    f64 x3;
-    bool ok3 = string_parse_float<f64>("inf"_u8, &x3);
-    expect(ok3);
-    (void)x3;
-
-    f64 x4;
-    bool ok4 = string_parse_float<f64>("-inf"_u8, &x4);
-    expect(ok4);
-    (void)x4;
-
-    f64 x5;
-    bool ok5 = string_parse_float<f64>("nan"_u8, &x5);
-    expect(ok5);
-    (void)x5;
-
     f32 x6;
     bool ok6 = string_parse_float("10.0  "_u8, &x6);
     expect(!ok6);
@@ -311,6 +296,11 @@ test("string_parse_float")
     bool ok7 = string_parse_float("10zzz"_u8, &x7);
     expect(!ok7);
     (void)x7;
+
+    f64 x8;
+    bool ok8 = string_parse_float<f64>("1.2e9"_u8, &x8);
+    expect(ok8);
+    expect(x8 == 1.2e9);
 }
 
 test("string_next_token")
@@ -464,7 +454,8 @@ test("Array")
 {
     auto array = make_array<int>();
     append(&array, 10);
-    append(&array, 20, 30);
+    append(&array, 20);
+    append(&array, 30);
     expect(array.count == 3);
     expect(array.capacity == 4);
     expect(array[0] == 10);

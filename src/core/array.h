@@ -117,16 +117,6 @@ append(Array<T> *array, T value)
     ++array->count;
 }
 
-// Appends items to the end of the array and increases count. The array is
-// resized if needed.
-template <typename T, typename... Ts>
-void
-append(Array<T> *array, T value, Ts... values)
-{
-    append(array, value);
-    (append(array, values), ...);
-}
-
 // Appends items from a slice to the end of the array and increases count. The
 // array is resized if needed.
 template <typename T>

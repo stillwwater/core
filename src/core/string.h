@@ -123,6 +123,12 @@ to_upper(u8 ch)
 template <typename T = f32>
 bool string_parse_float(Slice<u8> str, T *result);
 
+// Converts a string to a signed integer.
+bool string_parse_signed(Slice<u8> str, i64 int_min, i64 int_max, i64 base, i64 *result);
+
+// Converts a string to an unsigned integer.
+bool string_parse_unsigned(Slice<u8> str, u64 int_max, u64 base, u64 *result);
+
 // Converts a string to an integer.
 // * By default `i32` is assumed.
 // * If `base` is 0 the int base will be determined by the string format: if
@@ -137,75 +143,22 @@ bool string_parse_float(Slice<u8> str, T *result);
 //   characters will result in an error.
 template <typename T = i32>
 bool
-string_parse_int(Slice<u8> str, T *result, i64 base = 0)
+string_parse_int(Slice<u8> str, T *result, u64 base = 0)
 {
-    u64 acc = 0;
-    bool neg = 0;
+    constexpr auto int_min = std::numeric_limits<T>::min();
+    constexpr auto int_max = std::numeric_limits<T>::max();
 
-    while (str && is_space(str[0])) {
-        advance(&str, 1);
+    if constexpr (int_min < 0) {
+        i64 result64;
+        bool parsed = string_parse_signed(str, int_min, int_max, base, &result64);
+        *result = static_cast<T>(result64);
+        return parsed;
+    } else {
+        u64 result64;
+        bool parsed = string_parse_unsigned(str, int_max, base, &result64);
+        *result = static_cast<T>(result64);
+        return parsed;
     }
-    if (!str) {
-        *result = 0;
-        return false;
-    }
-    if (std::numeric_limits<T>::min() < 0 && str[0] == '-') {
-        neg = true;
-        advance(&str, 1);
-        if (!str) {
-            *result = 0;
-            return false;
-        }
-    }
-
-    if (str && str[0] == '0') {
-        if ((base == 0 || base == 16)
-                && str.count > 1
-                && (str[1] == 'x' || str[1] == 'X')) {
-            base = 16;
-            advance(&str, 2);
-        } else if (base == 0 || base == 8) {
-            base = 8;
-            advance(&str, 1);
-        }
-    }
-    if (base == 0) base = 10;
-
-    bool valid = false;
-    u64 ovflimit = neg
-        ? -std::numeric_limits<T>::min()
-        : std::numeric_limits<T>::max();
-    u64 ovfmin = ovflimit % base;
-    u64 ovfmax = ovflimit / base;
-
-    for (; str.count; ++str.data, --str.count) {
-        char c = *str.data;
-        if (is_digit(c)) {
-            c -= '0';
-        } else if (is_alpha(c)) {
-            c -= is_upper(c) ? 'A' - 10 : 'a' - 10;
-        } else {
-            valid = false;
-            break;
-        }
-
-        if (c >= base) {
-            valid = false;
-            break;
-        }
-        if (acc > ovfmax || (acc == ovfmax && acc > ovfmin)) {
-            *result = (T)ovflimit;
-            return false;
-        }
-
-        valid = true;
-        acc *= base;
-        acc += c;
-    }
-
-    *result = (T)acc;
-    if (neg) *result = -(*result);
-    return valid;
 }
 
 #endif // CORE_STRING_H_

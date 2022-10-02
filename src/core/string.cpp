@@ -256,8 +256,8 @@ string_parse_signed(Slice<u8> str, i64 int_min, i64 int_max, i64 base, i64 *resu
         advance(&str, 1);
     }
     if (str.count == 0) goto err;
-    if (str.data[0] == '-') {
-        neg = true;
+    if (str.data[0] == '-' || str.data[0] == '+') {
+        neg = str.data[0] == '-';
         advance(&str, 1);
         if (str.count == 0) goto err;
     }
@@ -369,11 +369,11 @@ string_parse_float<f64>(Slice<u8> str, f64 *result)
     }
     if (str.count == 0) goto err;
 
-    if (str.data[0] == '-') {
+    if (str.data[0] == '-' || str.data[0] == '+') {
+        neg = str.data[0] == '-';
         advance(&str, 1);
-        neg = true;
+        if (str.count == 0) goto err;
     }
-    if (str.count == 0) goto err;
 
     for (; i < str.count; ++i) {
         char c = str.data[i];

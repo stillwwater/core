@@ -24,13 +24,12 @@
 // Color layout        (r, g, b, a)
 namespace math {
 
-constexpr float Epsilon = float(std::numeric_limits<float>::epsilon());
-constexpr float Euler   = float(2.71828182845904523536);
+constexpr float e       = float(2.71828182845904523536);
 constexpr float PI      = float(3.14159265358979323846);
 constexpr float PI_2    = float(1.57079632679489661923);
 constexpr float PI_4    = float(0.78539816339744830961);
 constexpr float TAU     = float(6.28318530717958647692);
-constexpr float Sqrt2   = float(1.41421356237309504880);
+constexpr float SQRT2   = float(1.41421356237309504880);
 
 template <typename T, size_t N>
 struct Vector;
@@ -688,7 +687,7 @@ slerp(Vector<T, N> a, Vector<T, N> b, U t)
     T s_ht = sqrt(T(1) - c_ht * c_ht);
 
     // For 180 degrees slerp is not defined
-    if (abs(s_ht) < Epsilon) {
+    if (abs(s_ht) < std::numeric_limits<T>::epsilon()) {
         return lerp(a, b, T(0.5));
     }
 
@@ -1201,13 +1200,11 @@ mat4(Vector4 c0, Vector4 c1, Vector4 c2, Vector4 c3)
 
 #ifndef MATH_NO_GLOBAL_NAMESPACE
 
-using math::Epsilon;
-using math::Euler;
 using math::PI;
 using math::PI_2;
 using math::PI_4;
 using math::TAU;
-using math::Sqrt2;
+using math::SQRT2;
 
 using math::Vector2;
 using math::Vector3;

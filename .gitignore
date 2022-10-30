@@ -1,3 +1,8 @@
 *.exe
 *.pdb
 *.out
+*.swp
+*.obj
+*.o
+test
+.vs/

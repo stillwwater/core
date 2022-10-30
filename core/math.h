@@ -536,38 +536,38 @@ affine_inverse(const Matrix<T, 4, 4> &m)
 template <typename T>
 struct Rectangle {
     T x, y;
-    T width, height;
+    T w, h;
 
     Rectangle() = default;
-    constexpr Rectangle(T x_, T y_, T width_, T height_)
+    constexpr Rectangle(T x_, T y_, T w_, T h_)
         : x(x_)
         , y(y_)
-        , width(width_)
-        , height(height_) {}
+        , w(w_)
+        , h(h_) {}
 };
 
 template <typename T>
 bool
 contains(Rectangle<T> r, Vector<T, 2> v)
 {
-    return v.x >= r.x && v.y >= r.y && v.x <= r.x + r.width && v.y <= r.y + r.height;
+    return v.x >= r.x && v.y >= r.y && v.x <= r.x + r.w && v.y <= r.y + r.h;
 }
 
 template <typename T>
 bool
 contains(Rectangle<T> a, Rectangle<T> b)
 {
-    return b.x >= a.x && b.y >= a.y && b.width <= a.width && b.height <= a.height;
+    return b.x >= a.x && b.y >= a.y && b.w <= a.w && b.h <= a.h;
 }
 
 template <typename T>
 bool
 intersects(Rectangle<T> a, Rectangle<T> b)
 {
-    return !(b.x > (a.x + a.width)
-            || (b.x + b.width) < a.x
-            || b.y > (a.y + a.height)
-            || (b.y + b.height) < a.y);
+    return !(b.x > (a.x + a.w)
+            || (b.x + b.w) < a.x
+            || b.y > (a.y + a.h)
+            || (b.y + b.h) < a.y);
 }
 
 //
@@ -617,9 +617,9 @@ swap(T *a, T *b)
 
 template <typename T>
 bool
-equal(T a, T b, T e = std::numeric_limits<T>::epsilon())
+equal(T a, T b, T eps = std::numeric_limits<T>::epsilon())
 {
-    return abs(a - b) <= e;
+    return abs(a - b) <= eps;
 }
 
 template <typename T>
@@ -799,17 +799,17 @@ normalize(Vector<T, N> *v)
 
 template <typename T, size_t N>
 bool
-equal(Vector<T, N> a, Vector<T, N> b, T e = std::numeric_limits<T>::epsilon())
+equal(Vector<T, N> a, Vector<T, N> b, T eps = std::numeric_limits<T>::epsilon())
 {
-    return length2(a - b) <= e * e;
+    return length2(a - b) <= eps * eps;
 }
 
 template <typename T, size_t M, size_t N>
 bool
-equal(const Matrix<T, M, N> &a, const Matrix<T, M, N> &b, T e)
+equal(const Matrix<T, M, N> &a, const Matrix<T, M, N> &b, T eps)
 {
     for (size_t c = 0; c < Matrix<T, M, N>::COLUMNS; ++c) {
-        if (!equal(a[c], b[c], e)) {
+        if (!equal(a[c], b[c], eps)) {
             return false;
         }
     }

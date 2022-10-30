@@ -10,7 +10,7 @@ Core Library
 Including as a library
 ----------------------
 
-    mkdir 3p
-    cd 3p
+    mkdir external
+    cd external
     git submodule add https://github.com/stillwwater/core.git
     clang++ -Iexternal core/all.cpp main.cpp

@@ -1,8 +1,14 @@
 Core Library
 ============
 
-    g++ -I. -std=c++17 core/all_test.cpp -o test
+    g++ -I.. -std=c++17 all_test.cpp -o test
     ./test
 
-    cl -I. -std:c++17 core\all_test.cpp
+    cl -I.. -std:c++17 all_test.cpp
     all_test.exe
+
+Including as a library
+----------------------
+
+    git submodule add https://github.com/stillwwater/core.git
+    clang++ core\all.cpp main.cpp
